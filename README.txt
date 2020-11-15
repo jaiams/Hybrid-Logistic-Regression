@@ -1,3 +1,11 @@
+THIS IS THE HYBRID LOGISTIC REGRESSION BY SAMGAR, SARABILLO AND LAGASI.
+
+REQUIREMENTS
+-PYTHON ADD ON
+-VSCODE
+
+
+
 INSTALLATION ON VSCODE
 
 -Install Python Add-on 
@@ -16,6 +24,7 @@ Option A.
 8. -py pip install matplotlib
 9. -py pip install imblearn
 10.-py pip install mlxtend
+11.-py pip install pyqt5
 
 Option B
 1. pip install -U nltk
@@ -28,5 +37,6 @@ Option B
 8. pip install matplotlib
 9. pip install imblearn
 10.pip install mlxtend
+11.pip install pyqt5
 
 
