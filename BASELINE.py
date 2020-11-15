@@ -20,30 +20,23 @@ import matplotlib.pyplot as plt
 
 
 
+from numpy import log, dot, e, where
+from numpy.random import rand
+
 
 
 
 class LogisticRegression():
     
     def sigmoid(self, z): return 1 / (1 + e**(-z))
-
     
-    def softmax(self,x):
-        e_x = np.exp(x - np.max(x))
-        return e_x / e_x.sum(axis=0)
-  
-    def tanh(self,z):
-        ez = np.exp(z)
-        enz = np.exp(-z)
-        return (ez - enz)/ (ez + enz)
-
     def cost_function(self, X, y, weights):                 
         z = dot(X, weights)
         predict_1 = y * log(self.sigmoid(z))
         predict_0 = (1 - y) * log(1 - self.sigmoid(z))
-        return -sum(predict_1 + predict_0 ) / len(X)
+        return -sum(predict_1 + predict_0) / len(X)
     
-
+   
     
     def fit(self, X, y, epochs=25, lr=0.05):        
         loss = []
@@ -53,10 +46,7 @@ class LogisticRegression():
         for _ in range(epochs):        
             # Gradient Descent
             y_hat = self.sigmoid(dot(X, weights))
-            x_hat = self.softmax(dot(X, weights))
-            z_hat = self.tanh(dot(X, weights))
-            
-            weights -= lr * dot(X.T,  y_hat - x_hat - z_hat- y) / N            
+            weights -= lr * dot(X.T,  y_hat - y) / N            
             # Saving Progress
             loss.append(self.cost_function(X, y, weights)) 
             
@@ -65,64 +55,45 @@ class LogisticRegression():
     
     
     def predict(self, X):        
-        # Predicting with sigmoid,Softmax and tanh function
+        # Predicting with sigmoid function
         z = dot(X, self.weights)
-     
-        soft = self.softmax(z)
-        
-        tand = self.tanh(soft)
-        
-    
         # Returning binary result
         x = []
-        for i in tand:
-            if i > 0.05:
+        print (z)
+        for i in z:
+            if i > 0.0:
                 x.append(1)
                 print("{:.2f}".format(i),': 1')
-            elif (i >= .01) and (i <=0.059):
-                x.append(0)
-                print("{:.2f}".format(i),": 0")
             else:
-                x.append(-1)
-                print("{:.2f}".format(i),': -1')
+                x.append(0)
+                print("{:.2f}".format(i),': 0')
                 
         return x
 
-
-
-
-class logistic_regression():
+class baseline_algo():
     
     
     
     
-    def Preprocess(self):
-        
+    def BASELINE_METHOD(self):
         #-----SPLIT DATASETS-------
         tested = pd.read_csv(r'test.csv')
         x = tested.iloc[:, [5, 6]].values   
         # output 
         y = tested.iloc[:, 7].values
-        xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size = 0.40, random_state = 42) 
-
+        xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size = 0.70, random_state = 42) 
+      
         #4 Feature Scaling
-
-
-        #Feature Scaling or Standardization: It is a step of Data Pre Processing which is applied to independent variables or features of data. 
-        # It basically helps to normalise the data within a particular range. Sometimes, it also helps in speeding up the calculations in an algorithm.
-
-
         sc_x = StandardScaler() 
         xtrain = sc_x.fit_transform(np.asarray(xtrain))  
-        xtest = sc_x.transform(np.asarray(xtest))
-
-        counter = Counter(y) 
-
-
-      #---------------SMOTE ALGORITHM--------------------------
+        xtest = sc_x.transform(np.asarray(xtest)) 
+        
+        
+        counter = Counter(y)
+        #---------------SMOTE ALGORITHM--------------------------
     
         print("Before OverSampling, counts of label '1': {}\n".format(sum(ytrain == 1))) 
-        print("Before OverSampling, counts of label '-1': {} \n".format(sum(ytrain == -1))) 
+        print("Before OverSampling, counts of label '-1': {} \n".format(sum(ytrain == 0))) 
         print('WITH SMOTE')
 
         os =  RandomOverSampler(sampling_strategy='minority')
@@ -137,29 +108,13 @@ class logistic_regression():
         print('After OverSampling, the shape of train_y: {} \n'.format(ytrain.shape)) 
     
         print("After OverSampling, counts of label '1': {}".format(sum(ytrain == 1))) 
-        print("After OverSampling, counts of label '-1': {}".format(sum(ytrain == -1)))
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        print("After OverSampling, counts of label '-1': {}".format(sum(ytrain == 0)))
         #---------------LOGISTIC REGRESSION----------------------
+
+        #sklearn.linear_model LogisticRegression Interpretation
         #5 Fitting the Logistic Regression to the Training Set: 
+    
+        #There are many optional parameters. Lets only use random_state=0
         #We create a classifier object of LR class
         
         classifier = LogisticRegression()
@@ -167,30 +122,27 @@ class logistic_regression():
 
         #Fit logistic regression model to the training set (Xtrain and ytrain)
         classifier.fit(xtrain, ytrain)
+        
        
-    
+       
         #6 Predicting the Test set results
         #Using predict method for the classifier object and put Xtest for #argument
         y_pred = classifier.predict(xtest)
         print(y_pred)
-        posed = 1
-        neued = 1
-        neged = 1
-
-        
-
-
+        posed = 0
+        neued = 0
+        neged = 0
         #-----------The Result On The Logistic Regression Process Based on the Number of Test size will be seperated and determine the overall Result--------------
         for over in y_pred:
           
             if over == 1:
                 posed+=1
-            elif over ==0:
-                neued +=1     
+              
             else: 
                 neged+=1
+
+        counter = Counter(y)
         
-    
 
         #---------------CONFUSION MATRIX----------------------
         #7 Making the Confusion Matrix. It contains the correct and incorrect predictions of our model 
@@ -204,27 +156,21 @@ class logistic_regression():
         
         print ("Confusion Matrix : \n", cm)   
         print (cr)
-
         import mlxtend.plotting
         from mlxtend.plotting import plot_confusion_matrix
-        class_names = ['-1', '0', '1']
-        fig, ax = plot_confusion_matrix(conf_mat=cm,colorbar=True,class_names=class_names)
-        fig.canvas.set_window_title('HYBRID LOGISTIC REGRESSION')
+        class_names = ['-1','0', '1']
+        fig, ax = plot_confusion_matrix(conf_mat=cm,colorbar=True,
+                                class_names=class_names)
+        fig.canvas.set_window_title('BASELINE LOGISTIC REGRESSION')
         plt.ylabel('Actual label')
         plt.xlabel('Predicted label')
         plt.show()
 
 
+
+
         
-        
-
-
-
-
-
-
-
-        #-----SENDS ALL VALUES TO APPEAR ON THE USER INTERFACE----------------
+        #-----SENDS ALL VALUES TO APPEAR ON THE UI----------------
         global accurate, confuse,posi, neut, nega, overall,plots,replot,percentage, reports
         accurate = accuracy_score(ytest, y_pred)
         print(accurate)
@@ -238,8 +184,7 @@ class logistic_regression():
         replot = plt
         reports = cr
 
-       
-
+        
 
         if (neut >= posi) and (neut >= nega):
             overall = 'NEUTRAL'
@@ -257,7 +202,7 @@ class logistic_regression():
 
     
                 
-object = logistic_regression()
-object.Preprocess()
+object = baseline_algo()
+object.BASELINE_METHOD()
 
 
