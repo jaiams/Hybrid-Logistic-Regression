@@ -1,9 +1,4 @@
 import sys, csv
-#-------------PREPROCESSING-----------------
-from textblob import TextBlob 
-from nltk.tokenize import sent_tokenize, word_tokenize
-from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer
 #----------LOGISITC REGRESSION PART------------
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler 
@@ -21,9 +16,7 @@ from collections import Counter
 import pandas as pd
 import numpy as np
 import seaborn as sns
-from numpy import where
 import matplotlib.pyplot as plt
-import torch 
 
 
 
@@ -245,9 +238,7 @@ class logistic_regression():
         replot = plt
         reports = cr
 
-        pos = 1
-        neu = 1
-        neg = 1
+       
 
 
         if (neut >= posi) and (neut >= nega):
