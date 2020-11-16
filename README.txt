@@ -40,3 +40,4 @@ Option B
 11.pip install pyqt5
 
 
+Any missing Libraries that need on our program. follow the format on option A or B
