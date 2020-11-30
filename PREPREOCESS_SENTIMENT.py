@@ -31,72 +31,24 @@ from functools import wraps
 from numpy import log, dot, e, where
 from numpy.random import rand
 
-
-
-
-class LogisticRegression():
-    
-    def sigmoid(self, z): return 1 / (1 + e**(-z))
-    
-    def cost_function(self, X, y, weights):                 
-        z = dot(X, weights)
-        predict_1 = y * log(self.sigmoid(z))
-        predict_0 = (1 - y) * log(1 - self.sigmoid(z))
-        return -sum(predict_1 + predict_0) / len(X)
-    
-   
-    
-    def fit(self, X, y, epochs=25, lr=0.05):        
-        loss = []
-        weights = rand(X.shape[1])
-        N = len(X)
-                 
-        for _ in range(epochs):        
-            # Gradient Descent
-            y_hat = self.sigmoid(dot(X, weights))
-            weights -= lr * dot(X.T,  y_hat - y) / N            
-            # Saving Progress
-            loss.append(self.cost_function(X, y, weights)) 
-            
-        self.weights = weights
-        self.loss = loss
+class Sentiment_process():
     
     
-    def predict(self, X):        
-        # Predicting with sigmoid function
-        z = dot(X, self.weights)
-        # Returning binary result
-        x = []
-        print (z)
-        for i in z:
-            if i > 0.0:
-                x.append(1)
-                print("{:.2f}".format(i),': 1')
-            else:
-                x.append(0)
-                print("{:.2f}".format(i),': 0')
-                
-        return x
-
-class logistic_regression():
-    
-    
-    
-    
-    def Preprocess(self):
+    def __init__(self,getfile):
         try:
             pos = 1
-            
             neg = 1
             #tokened_text = str('')
             #stemmed_text = str('')
             polarity = 0
             col_list = ["ID", "TWEETS"]   
-        
+            self.getfile = getfile
+            print(self.getfile)
             #-----READS THE DATASET OF THE TWEETS-----------
-            df = pd.read_csv("train.csv", usecols=col_list)
+            df = pd.read_csv(self.getfile, usecols=col_list)
         
             reader = df["TWEETS"]
+            print(reader)
             with open('test.csv', 'w',encoding='utf8', newline='') as filed: 
                 writer = csv.writer(filed)
                 writer.writerow(["ID", "TWEETS","TOKENIZED","STOP WORDS", "STEMMED", "POLARITY", "SUBJECTIVITY", "SENTIMENT"])
@@ -130,7 +82,7 @@ class logistic_regression():
                         getstoped = getsteam
                         stemmed_tweet.append(ps.stem(getsteam))
                         #steam_sentence=ps.stem(get_stop)
-                    
+                        print(stemmed_tweet)
 
                     
 
@@ -146,9 +98,7 @@ class logistic_regression():
                         if analysis.sentiment.polarity > 0:
                             sentied = 1
                             #pos+=1
-                        #elif analysis.sentiment.polarity == 0:
-                            #sentied = 0
-                            #pos+=1
+                        
                         else: 
                             neg+=1
                             sentied = -1
@@ -162,9 +112,6 @@ class logistic_regression():
             pass
                 
 
-    
-                
-object = logistic_regression()
-object.Preprocess()
-
+if __name__ == '__main__':
+    Sentiment_process()
 

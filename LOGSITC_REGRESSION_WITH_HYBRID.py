@@ -17,7 +17,9 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+import time
 
+start = time.time()
 
 
 
@@ -78,7 +80,7 @@ class LogisticRegression():
         for i in tand:
             if i > 0.05:
                 x.append(1)
-                print("{:.2f}".format(i),': 1')
+                print("{:.2f}".format(i),': 1')    
             elif (i >= .01) and (i <=0.059):
                 x.append(0)
                 print("{:.2f}".format(i),": 0")
@@ -96,14 +98,17 @@ class logistic_regression():
     
     
     
-    def Preprocess(self):
-        
+    def __init__(self,getfile, test_num):
+       
         #-----SPLIT DATASETS-------
-        tested = pd.read_csv(r'test.csv')
+        self.getfile = getfile
+        self.test_num = test_num
+        
+        tested = pd.read_csv(self.getfile)
         x = tested.iloc[:, [5, 6]].values   
         # output 
         y = tested.iloc[:, 7].values
-        xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size = 0.40, random_state = 42) 
+        xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size = self.test_num, random_state = 42) 
 
         #4 Feature Scaling
 
@@ -191,7 +196,8 @@ class logistic_regression():
                 neged+=1
         
     
-
+        end = time.time()
+        final_timed = end - start
         #---------------CONFUSION MATRIX----------------------
         #7 Making the Confusion Matrix. It contains the correct and incorrect predictions of our model 
        
@@ -224,8 +230,8 @@ class logistic_regression():
 
 
 
-        #-----SENDS ALL VALUES TO APPEAR ON THE USER INTERFACE----------------
-        global accurate, confuse,posi, neut, nega, overall,plots,replot,percentage, reports
+        #-------SENDS ALL VALUES TO APPEAR ON THE USER INTERFACE----------------
+        global accurate, confuse,posi, neut, nega, overall,plots,replot,percentage, reports, final_time
         accurate = accuracy_score(ytest, y_pred)
         print(accurate)
         percentage = "{:.0%}".format(accurate)
@@ -250,14 +256,14 @@ class logistic_regression():
 
         
         print(overall)
-            
-        return percentage, confuse, posi, neut, nega, overall, plots, replot, reports           
+        final_time = final_timed 
+        
+        #return percentage, confuse, posi, neut, nega, overall, plots, replot, reports, final_time           
                    
                 
 
     
                 
-object = logistic_regression()
-object.Preprocess()
-
+if __name__ == '__main__':
+    logistic_regression()
 

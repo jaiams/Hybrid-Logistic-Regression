@@ -25,7 +25,9 @@ from numpy.random import rand
 
 
 
+import time
 
+start = time.time()
 class LogisticRegression():
     
     def sigmoid(self, z): return 1 / (1 + e**(-z))
@@ -72,16 +74,18 @@ class LogisticRegression():
 
 class baseline_algo():
     
-    
-    
-    
-    def BASELINE_METHOD(self):
+    def __init__ (self, getfile, test_num):
+
         #-----SPLIT DATASETS-------
-        tested = pd.read_csv(r'test.csv')
+        self.getfile = getfile
+        self.test_num = test_num
+        print(self.getfile)
+        print(self.test_num)
+        tested = pd.read_csv(self.getfile)
         x = tested.iloc[:, [5, 6]].values   
         # output 
         y = tested.iloc[:, 7].values
-        xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size = 0.70, random_state = 42) 
+        xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size = self.test_num, random_state = 42) 
       
         #4 Feature Scaling
         sc_x = StandardScaler() 
@@ -143,7 +147,8 @@ class baseline_algo():
 
         counter = Counter(y)
         
-
+        end = time.time()
+        final_timed = end - start
         #---------------CONFUSION MATRIX----------------------
         #7 Making the Confusion Matrix. It contains the correct and incorrect predictions of our model 
        
@@ -171,7 +176,7 @@ class baseline_algo():
 
         
         #-----SENDS ALL VALUES TO APPEAR ON THE UI----------------
-        global accurate, confuse,posi, neut, nega, overall,plots,replot,percentage, reports
+        global accurate, confuse,posi, neut, nega, overall,plots,replot,percentage, reports,final_time
         accurate = accuracy_score(ytest, y_pred)
         print(accurate)
         percentage = "{:.0%}".format(accurate)
@@ -195,14 +200,15 @@ class baseline_algo():
 
         
         print(overall)
-            
-        return percentage, confuse, posi, neut, nega, overall, plots, replot, reports           
+        final_time = final_timed
+        print(final_time)
+        #return percentage, confuse, posi, neut, nega, overall, plots, replot, reports, final_time           
                    
                 
 
     
                 
-object = baseline_algo()
-object.BASELINE_METHOD()
+if __name__ == '__main__':
+    baseline_algo
 
 
