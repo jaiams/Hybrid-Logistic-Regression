@@ -17,7 +17,8 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-
+from matplotlib import pyplot
+import imblearn
 
 
 from numpy import log, dot, e, where
@@ -61,16 +62,20 @@ class LogisticRegression():
         z = dot(X, self.weights)
         # Returning binary result
         x = []
-        print (z)
-        for i in z:
-            if i > 0.0:
-                x.append(1)
-                print("{:.2f}".format(i),': 1')
-            else:
-                x.append(0)
-                print("{:.2f}".format(i),': 0')
-                
-        return x
+        #print (z)
+        with open('temp_filebase.csv', 'w',encoding='utf8', newline='') as filed: 
+            writer = csv.writer(filed)
+            writer.writerow(["logit"])
+            for i in z:
+                if i > 0.0:
+                    x.append(1)
+                    file = str("{:.2f}".format(i))
+                else:
+                    x.append(0)
+                    file = str("{:.2f}".format(i))
+                writer.writerow([file])  
+
+            return x
 
 class baseline_algo():
     
@@ -86,7 +91,7 @@ class baseline_algo():
         # output 
         y = tested.iloc[:, 7].values
         xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size = self.test_num, random_state = 42) 
-      
+        print(xtrain.shape, xtest.shape, ytrain.shape, ytest.shape)
         #4 Feature Scaling
         sc_x = StandardScaler() 
         xtrain = sc_x.fit_transform(np.asarray(xtrain))  
@@ -95,6 +100,14 @@ class baseline_algo():
         
         counter = Counter(y)
         #---------------SMOTE ALGORITHM--------------------------
+        
+        print(counter)
+       
+        # scatter plot of examples by class label
+        for label, _ in counter.items():
+            lab1 = label,' IMBALANCED'
+            row_ix = where(ytrain == label)[0]
+            pyplot.scatter(xtrain[row_ix, 0], xtrain[row_ix, 1], label=str(lab1))
     
         print("Before OverSampling, counts of label '1': {}\n".format(sum(ytrain == 1))) 
         print("Before OverSampling, counts of label '-1': {} \n".format(sum(ytrain == 0))) 
@@ -108,6 +121,14 @@ class baseline_algo():
                     
         counter = Counter(ytrain)
         print(counter)
+  
+        for label, _ in counter.items():
+            lab2 = label,' BALANCED'
+            row_ix = where(ytrain == label)[0]
+            pyplot.scatter(xtrain[row_ix, 0], xtrain[row_ix, 1], label=str(lab2))
+        pyplot.legend()
+        pyplot.title("SMOTE IMBALANCED AND BALANCED")
+        pyplot.show()
         print('After OverSampling, the shape of train_X: {}'.format(xtrain.shape)) 
         print('After OverSampling, the shape of train_y: {} \n'.format(ytrain.shape)) 
     
@@ -132,23 +153,61 @@ class baseline_algo():
         #6 Predicting the Test set results
         #Using predict method for the classifier object and put Xtest for #argument
         y_pred = classifier.predict(xtest)
-        print(y_pred)
+        #print(y_pred)
         posed = 0
-        neued = 0
+        neued= 0
         neged = 0
-        #-----------The Result On The Logistic Regression Process Based on the Number of Test size will be seperated and determine the overall Result--------------
-        for over in y_pred:
-          
-            if over == 1:
-                posed+=1
-              
-            else: 
-                neged+=1
 
-        counter = Counter(y)
+
+
+
+        #-----Access Database to store all data,since CSV is too hard to import all data in one---
         
-        end = time.time()
-        final_timed = end - start
+        import MySQLdb
+        
+        mydb = MySQLdb.connect(host="127.0.0.1", user="root", password="", database="logitregression_data")
+        mycursor = mydb.cursor()
+        logit = []
+        with open('temp_filebase.csv','r') as tempo:
+            read = csv.reader(tempo,delimiter = ',')
+            
+            for tem in read:
+                logit.append(tem)
+
+        
+
+
+          
+           
+            mycursor.execute("DELETE FROM baseline_logitval")
+            counter = 0
+            #-----------The Result On The Logistic Regression Process Based on the Number of Test size will be seperated and determine the overall Result--------------
+            for over in y_pred:
+                counter+=1
+                if over == 1:
+                    posed+=1
+                   
+                    #print("pos",getov)
+                    resu = 'Positive'
+                    regval  = 1
+                else: 
+                    neged+=1
+                  
+                    #print("neg",getov)
+                    resu = 'Negative'
+                    regval  = -1
+                #stregval = str(regval)
+                #valued = (counter,over,stregval, resu) 
+                
+                query2 = "INSERT INTO `baseline_logitval`(`BASE_ID`, `BASE_VALUE`, `BASE_SENTIMENT`, `BASE_RESULT`) VALUES (%s,%s,%s,%s)"
+                mycursor.execute(query2, (counter, logit[counter],regval,resu))
+
+           
+        
+
+        mydb.commit()  
+        mydb.close()
+       
         #---------------CONFUSION MATRIX----------------------
         #7 Making the Confusion Matrix. It contains the correct and incorrect predictions of our model 
        
@@ -173,10 +232,10 @@ class baseline_algo():
 
 
 
-
+      
         
         #-----SENDS ALL VALUES TO APPEAR ON THE UI----------------
-        global accurate, confuse,posi, neut, nega, overall,plots,replot,percentage, reports,final_time
+        global accurate, confuse,posi,neut, nega, overall,plots,replot,percentage, reports
         accurate = accuracy_score(ytest, y_pred)
         print(accurate)
         percentage = "{:.0%}".format(accurate)
@@ -188,21 +247,19 @@ class baseline_algo():
         plots = y_pred
         replot = plt
         reports = cr
-
         
 
-        if (neut >= posi) and (neut >= nega):
-            overall = 'NEUTRAL'
-        elif (posi >= neut) and (posi >= nega):
+        if posi >= nega:
             overall = 'POSITIVE'
         else:
             overall = 'NEGATIVE'
+     
 
-        
+       
         print(overall)
-        final_time = final_timed
-        print(final_time)
-        #return percentage, confuse, posi, neut, nega, overall, plots, replot, reports, final_time           
+        #final_time = final_timed
+        #print(final_time)
+        #return percentage, confuse, posi, nega, overall, plots, replot, reports        
                    
                 
 
