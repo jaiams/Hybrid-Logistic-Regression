@@ -25,7 +25,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from threading import Thread
 from functools import wraps
-
+import re
 
 
 from numpy import log, dot, e, where
@@ -34,12 +34,10 @@ from numpy.random import rand
 class Sentiment_process():
     
     
-    def __init__(self,getfile):
+    def __init__(self, getfile):
         try:
-            pos = 1
-            neg = 1
-            #tokened_text = str('')
-            #stemmed_text = str('')
+            
+           
             polarity = 0
             col_list = ["ID", "TWEETS"]   
             self.getfile = getfile
@@ -48,28 +46,35 @@ class Sentiment_process():
             df = pd.read_csv(self.getfile, usecols=col_list)
         
             reader = df["TWEETS"]
-            print(reader)
+            #print(reader)
             with open('test.csv', 'w',encoding='utf8', newline='') as filed: 
                 writer = csv.writer(filed)
                 writer.writerow(["ID", "TWEETS","TOKENIZED","STOP WORDS", "STEMMED", "POLARITY", "SUBJECTIVITY", "SENTIMENT"])
                 counter = 0
+                tok_count = 0
+                stop_wor_count = 0
+                stem_count = 0
                 tweetted = '' 
                 for row in reader:
                     tweetted = row
                     #-----TOKENIZING TWEETS FROM THE TWEETS ROW-----------
-                    tokenized_text=sent_tokenize(row)
-                    #print(tokenized_text)
+                    textonly = re.sub("[^a-zA-Z]", " ",str(tweetted))
+                    tokenized_text=sent_tokenize(textonly)
+                    
                     for k in tokenized_text:
                         tokenized_sentence=sent_tokenize(k)
-                        
+                        tok_count +=1
+                    print(tok_count)   
 
 
                     filtered_sent=[]
                     for tokword in tokenized_sentence:
                         stop_words=set(stopwords.words('english'))
-                        #print(tokword)
+                        
                         new_sentence = ' '.join([word for word in tokword.split() if word not in stop_words])
                         filtered_sent.append(new_sentence)
+                        stop_wor_count +=1
+                    #print(stop_wor_count)
                 
                         
 
@@ -81,9 +86,9 @@ class Sentiment_process():
                     for getsteam in filtered_sent:
                         getstoped = getsteam
                         stemmed_tweet.append(ps.stem(getsteam))
-                        #steam_sentence=ps.stem(get_stop)
-                        print(stemmed_tweet)
-
+                        #print(stemmed_tweet)
+                        stem_count +=1 
+                    #print(stem_count)
                     
 
                     
@@ -97,10 +102,10 @@ class Sentiment_process():
                         sentied = 0
                         if analysis.sentiment.polarity > 0:
                             sentied = 1
-                            #pos+=1
+                            
                         
                         else: 
-                            neg+=1
+                            
                             sentied = -1
                         
                         
@@ -108,10 +113,11 @@ class Sentiment_process():
                         writer.writerow([counter, tweetted, tokenized_sentence,getstoped, gather_steam, analysis.sentiment.polarity, analysis.sentiment.subjectivity, sentied])        
                     polarity += analysis.sentiment.polarity # adding up polarities to find the average later
             polarity = polarity / counter 
-        except:
-            pass
+        except Exception as e:
+    
+           print(e)
                 
 
 if __name__ == '__main__':
-    Sentiment_process()
+    Sentiment_process
 
