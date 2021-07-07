@@ -1,4 +1,4 @@
-import sys, csv
+import sys, csv, os
 #----------LOGISITC REGRESSION PART------------
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler 
@@ -77,19 +77,27 @@ class LogisticRegression():
     
         # Returning binary result
         x = []
-        for i in tand:
-            if i > 0.05:
-                x.append(1)
-                print("{:.2f}".format(i),': 1')    
-            elif (i >= .01) and (i <=0.059):
-                x.append(0)
-                print("{:.2f}".format(i),": 0")
-            else:
-                x.append(-1)
-                print("{:.2f}".format(i),': -1')
-                
-        return x
+        #---Temporary storage of logit values result----
+        with open('temp_file.csv', 'w',encoding='utf8', newline='') as filed: 
+            writer = csv.writer(filed)
+            writer.writerow(["logit"])
 
+            for i in tand:
+                if i > 0.05:
+                    x.append(1)
+                    file = str("{:.2f}".format(i))
+                    #print("{:.2f}".format(i),': 1')    
+                elif (i >= .01) and (i <=0.059):
+                    x.append(0)
+                    file = str("{:.2f}".format(i))
+                #print("{:.2f}".format(i),": 0")
+                else:
+                    x.append(-1)
+                    file = str("{:.2f}".format(i))
+                    #print("{:.2f}".format(i),': -1')
+                writer.writerow([file])
+        return x
+        
 
 
 
@@ -109,7 +117,9 @@ class logistic_regression():
         # output 
         y = tested.iloc[:, 7].values
         xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size = self.test_num, random_state = 42) 
-
+        print(xtrain.shape, xtest.shape, ytrain.shape, ytest.shape)
+        #testx = len(xtest)
+        #print(testx)
         #4 Feature Scaling
 
 
@@ -169,35 +179,91 @@ class logistic_regression():
         
         classifier = LogisticRegression()
 
-
+        
         #Fit logistic regression model to the training set (Xtrain and ytrain)
         classifier.fit(xtrain, ytrain)
-       
+        #vget = classifier.vard
+        #print(vget)
     
         #6 Predicting the Test set results
         #Using predict method for the classifier object and put Xtest for #argument
         y_pred = classifier.predict(xtest)
-        print(y_pred)
+        #print(y_pred)
         posed = 1
         neued = 1
         neged = 1
 
+
         
+        
+        import MySQLdb
+        
+        mydb = MySQLdb.connect(host="127.0.0.1", user="root", password="", database="logitregression_data")
+        mycursor = mydb.cursor()
+        logit = []
+        with open('temp_file.csv','r') as tempo:
+            read = csv.reader(tempo,delimiter = ',')
+            
+            for tem in read:
+                logit.append(tem)
 
+        with open(getfile, 'r') as file:
+            reader = csv.reader(file, delimiter=',')
+            all_value=[]
+            counter = 0
+        
+           
+            mycursor.execute("DELETE FROM hybrid_logitval")
 
-        #-----------The Result On The Logistic Regression Process Based on the Number of Test size will be seperated and determine the overall Result--------------
-        for over in y_pred:
+            #-----------The Result On The Logistic Regression Process Based on the Number of Test size will be seperated and determine the overall Result--------------
+            for over in y_pred:
+                counter+=1
+                if over == 1:
+                    posed+=1
+                  
+                 
+                    resu = 'Positive'
+                    regval  = 1
+                elif over ==0:
+                    neued +=1 
+                    
+                    
+                    resu = 'Neutral'
+                    regval  = 0  
+                else: 
+                    neged+=1
+                  
+                    resu = 'Negative'
+                    regval  = -1
+                #stregval = str(regval)
+                #valued = (counter,over,stregval, resu) 
+                
+                query2 = "INSERT INTO `hybrid_logitval`(`HYB_ID`, `HYB_VALUE`, `HYB_SENTIMENT`, `HYB_RESULT`) VALUES (%s,%s,%s,%s)"
+                mycursor.execute(query2, (counter,logit[counter],regval,resu))
+
+           
+            for row in reader:
+                #print(row[0])
+                value = (row[0], row[1], row[2], row[3],row[4], row[5], row[6], row[7])
+                all_value.append(value)
           
-            if over == 1:
-                posed+=1
-            elif over ==0:
-                neued +=1     
-            else: 
-                neged+=1
+            
+  
+        mycursor.execute("DELETE FROM `baseline`")
         
-    
-        end = time.time()
-        final_timed = end - start
+        query = "INSERT INTO `baseline`(`ID`, `TWEETS`, `TOKENIZED`, `STOP_WORDS`, `STEMMED`, `POLARITY`, `SUBJECTIVITY`, `SENTIMENT`) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
+        
+       
+        mycursor.executemany(query, all_value)
+        mycursor.execute("DELETE FROM `baseline` WHERE `baseline`.`ID` = 0")
+      
+        
+
+        mydb.commit()   
+        mydb.close()
+
+          
+        
         #---------------CONFUSION MATRIX----------------------
         #7 Making the Confusion Matrix. It contains the correct and incorrect predictions of our model 
        
@@ -207,6 +273,7 @@ class logistic_regression():
         import warnings
         warnings.filterwarnings("ignore")
         cr = classification_report(ytest, y_pred)
+        print(ytest)
         
         print ("Confusion Matrix : \n", cm)   
         print (cr)
@@ -231,7 +298,7 @@ class logistic_regression():
 
 
         #-------SENDS ALL VALUES TO APPEAR ON THE USER INTERFACE----------------
-        global accurate, confuse,posi, neut, nega, overall,plots,replot,percentage, reports, final_time
+        global accurate, confuse,posi, neut, nega, overall,plots,replot,percentage, reports
         accurate = accuracy_score(ytest, y_pred)
         print(accurate)
         percentage = "{:.0%}".format(accurate)
@@ -256,9 +323,8 @@ class logistic_regression():
 
         
         print(overall)
-        final_time = final_timed 
         
-        #return percentage, confuse, posi, neut, nega, overall, plots, replot, reports, final_time           
+        #return percentage, confuse, posi, neut, nega, overall, plots, replot, reports        
                    
                 
 
