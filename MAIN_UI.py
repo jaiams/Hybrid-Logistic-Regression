@@ -1,6 +1,6 @@
 import PyQt5
 from PyQt5 import QtWidgets,QtCore, QtGui
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLineEdit, QLabel, QTextEdit, QGroupBox, QMessageBox, QVBoxLayout, QSizePolicy,QFileDialog  
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLineEdit, QLabel, QTextEdit, QGroupBox, QMessageBox, QVBoxLayout, QSizePolicy,QFileDialog,QTableWidget,QTableWidgetItem
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSlot
 import pandas as pd
@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import pathlib
+import re
 
 
 #-------------SETTING THE GRAPH FOR OLD ALGORITHM-----------------
@@ -186,34 +187,68 @@ class MyFirstGUI(QtWidgets.QDialog):
         self.lbl_tally_hyboverall.setText('OVERALL RESULT: ')
         self.lbl_tally_hyboverall.move(940,470)
 
+
         #--------------------------------------------
 
 
 
 
         #----------------------TABLE FOR THE LIST OF GATHERED TWEETS-------------------
-        self.tableView = QtWidgets.QTableView(self)
-        self.tableView.setModel(self.model)
-        self.tableView.resize(1100, 150)
-        self.tableView.move(40,500)
-        #-------------------------------------------------------------------
+     
 
+        self.tableWidget = QtWidgets.QTableWidget(self)
+        self.tableWidget.resize(1100, 150)
+        self.tableWidget.move(40,500)
+        self.tableWidget.setColumnCount(14)
+        self.tableWidget.setObjectName("tableWidget")
+        self.tableWidget.setHorizontalHeaderLabels(["ID","TWEETS","TOKENIZED","STOP WORDS","STEMMED","POLARITY","SUBJECTIVITY","SENTIMENT","BASELINE VALUE","BASELINE SENTIMENT","BASELINE RESULT","HYBRID VALUE","HYBRID SENTIMENT", "HYBRID RESULT"])
+        self.tableWidget.doubleClicked.connect(self.getSelectedItemData)
+        self.tableWidget.setSelectionBehavior(self.tableWidget.SelectRows)
+        
+    
+    def terminate(self):
+        exit()
 
+    def getSelectedItemData(self):
+        paths = []
+        selected = self.tableWidget.selectedItems()
+        if selected:
+            for item in selected:
+                if item.column() == 1:
+                    tweet = item.data(0)
+                if item.column() == 5:
+                    polar = item.data(0)
+                if item.column() == 6:
+                    subject = item.data(0)    
+                if item.column() == 7:
+                    sentim = item.data(0)
+                if item.column() == 8:
+                    base_val = item.data(0)
+                if item.column() == 9:
+                    base_sent = item.data(0)
+                if item.column() == 10:
+                    base_res = item.data(0)
+                if item.column() == 11:
+                    hyb_val = item.data(0)
+                if item.column() == 12:
+                    hyb_sent = item.data(0)
+                if item.column() == 13:
+                    hyb_res = item.data(0)     
+                
+        print(paths)
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        message = 'SENTIMENT: ' + sentim
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        result_message = 'BASELINE VALUE: ' + base_val + '\n' + 'BASELINE SENTIMENT: ' + base_sent + "\n" + 'BASELINE RESULT: ' + base_res + "\n" + "======================================" + "\n"+ 'HYBRID VALUE: ' + hyb_val + '\n' + 'HYBRID SENTIMENT: ' + hyb_sent + "\n" + 'HYBRID RESULT: ' + hyb_res 
+        msg.setText(tweet)
+        msg.setInformativeText(message)
+        msg.setWindowTitle("LOGISTIC REGRESSION")
+        msg.setDetailedText(result_message)
+        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            
+        retval = msg.exec_()
+        #print ("value of pressed message box button:", retval)
 
 
 
@@ -222,16 +257,18 @@ class MyFirstGUI(QtWidgets.QDialog):
     def senti(self,event):
         try:
             self.file_select= self.openFileNameDialog(self)
-            file_train = self.file_select
+            self.file_train = self.file_select
+            self.getfile = self.file_train
           
             
 
-            if file_train == "no file":
+            if self.file_train == "no file":
                 pass
             else:
                 from PREPREOCESS_SENTIMENT import Sentiment_process
-                self.pass_message = Sentiment_process(self.getfile)
                 import PREPREOCESS_SENTIMENT
+                self.pass_message = PREPREOCESS_SENTIMENT.Sentiment_process(self.getfile)
+                
                 self.sentiment_result = QMessageBox()
                 self.sentiment_result.setWindowTitle("LOGISTIC REGRESSION")
                 self.sentiment_result.setText("SENTIMENT TWEETS COMPLETE")
@@ -240,8 +277,14 @@ class MyFirstGUI(QtWidgets.QDialog):
                 
             
 
-        except:
-            pass
+        except Exception as e:
+            print(e)
+            
+            self.result = QMessageBox()
+            self.result.setWindowTitle("LOGISTIC REGRESSION")
+            self.result.setText('ERROR')
+            self.result.setIcon(QMessageBox.Warning)
+            self.x = self.result.exec_()
 
 
 
@@ -382,7 +425,21 @@ class MyFirstGUI(QtWidgets.QDialog):
                         self.lbl_confusenew.setText(post_hyb_cm)
                         self.lbl_confusenew.adjustSize()
 
-                        self.loadCsv(self.fileName)
+                        self.loaddata()
+                        self.tableWidget.setHorizontalHeaderLabels(["ID","TWEETS","TOKENIZED","STOP WORDS","STEMMED","POLARITY","SUBJECTIVITY","SENTIMENT","BASELINE VALUE","BASELINE SENTIMENT","BASELINE RESULT","HYBRID VALUE","HYBRID SENTIMENT", "HYBRID RESULT"])
+                        import os
+                        if os.path.exists("temp_filebase.csv"):
+                            os.remove("temp_filebase.csv")
+                        else:
+                            print("The file does not exist")
+                        
+                        
+                        if os.path.exists("temp_file.csv"):
+                            os.remove("temp_file.csv")
+                        else:
+                            print("The file does not exist")
+        
+        
                         #----------------MESSAGE BOX-------------------------
                         final_results = final_report + "\n" +"------------------------------" + "\n" + "WITH HYBRID" + "\n" +  final_hyb_report
                         self.result = QMessageBox()
@@ -397,7 +454,9 @@ class MyFirstGUI(QtWidgets.QDialog):
                     self.result.setText('FILE NOT FOUND, PLEASE CLICK THE SENTIMENT BUTTON TO CREATE THE TEST.CSV')
                     self.result.setIcon(QMessageBox.Information)
                     self.x = self.result.exec_()
-        except:
+        except Exception as e:
+            print(e)
+            
             self.result = QMessageBox()
             self.result.setWindowTitle("LOGISTIC REGRESSION")
             self.result.setText('ERROR')
@@ -405,93 +464,27 @@ class MyFirstGUI(QtWidgets.QDialog):
             self.x = self.result.exec_()
         
     #-----------------FOR THE TABLE VIEW--------------------
-    def loadCsv(self, fileName):
-        with open(fileName, "r", encoding='utf8') as fileInput:
-            for row in csv.reader(fileInput):    
-                items = [
-                    QtGui.QStandardItem(field)
-                    for field in row
-                ]
-                self.model.appendRow(items)
+    def loaddata(self):
+        import MySQLdb
+        
+        mydb = MySQLdb.connect(host="127.0.0.1", user="root", password="", database="logitregression_data")
+        mycursor = mydb.cursor()
+        query = "SELECT baseline.ID, baseline.TWEETS,baseline.TOKENIZED,baseline.STOP_WORDS,baseline.STEMMED,baseline.POLARITY,baseline.SUBJECTIVITY, baseline.SENTIMENT,baseline_logitval.BASE_VALUE,baseline_logitval.BASE_SENTIMENT,baseline_logitval.BASE_RESULT, hybrid_logitval.HYB_VALUE,hybrid_logitval.HYB_SENTIMENT,hybrid_logitval.HYB_RESULT FROM baseline LEFT JOIN baseline_logitval on baseline.ID = baseline_logitval.BASE_ID LEFT JOIN hybrid_logitval ON baseline.ID = hybrid_logitval.HYB_ID WHERE baseline_logitval.BASE_VALUE IS NOT NULL"
+        mycursor.execute(query)
 
+        result = mycursor.fetchall()
+        self.tableWidget.setRowCount(0)
+        for row_number, row_data in enumerate(result):
+            print(row_number)
+            self.tableWidget.insertRow(row_number)
+            for column_number, data in enumerate(row_data):
+                #print(column_number)
+                self.tableWidget.setItem(row_number, column_number, QTableWidgetItem(str(data)))
 
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        
+        
 
     
-    def terminate(self):
-        exit()       
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     def on_clear(self):
@@ -550,9 +543,9 @@ class MyFirstGUI(QtWidgets.QDialog):
         self.clear.setEnabled(False)
         self.layout_oldalgo.deleteLater()
         self.layout_newalgo.deleteLater()
-        self.model.clear() 
+        self.tableWidget.clear() 
 
-
+        self.tableWidget.setHorizontalHeaderLabels(["ID","TWEETS","TOKENIZED","STOP WORDS","STEMMED","POLARITY","SUBJECTIVITY","SENTIMENT","BASELINE VALUE","BASELINE SENTIMENT","BASELINE RESULT","HYBRID VALUE","HYBRID SENTIMENT", "HYBRID RESULT"])
 
     #-------------------OPEN FILES FOR DATA------------------------
 
@@ -566,7 +559,7 @@ class MyFirstGUI(QtWidgets.QDialog):
         else:
             self.file_select = "no file"
             return self.file_select
-
+    
         
             
 if __name__ == '__main__':
