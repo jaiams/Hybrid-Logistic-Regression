@@ -8,10 +8,20 @@ REQUIREMENTS
 
 INSTALLATION ON VSCODE
 
--Install Python Add-on 
+1. Install Python Add-on 
 
--Install The following libraries on VSCODE Using Terminal
+2. Install The following libraries on VSCODE Using Terminal
 
+INSTALLATION ON XAMPP
+
+1. Install Xampp
+2. after installing, open xampp
+3. activate apachie and mysql
+4. open browser and type localhost
+5. go to phpmyadmin
+6. create database "logitregression_data"
+7. go to "logitregression_data" database 
+8. go to import and press choose file. select the logitregression_data.sql and click GO.
 
 Option A.
 1. -py pip install -U nltk
